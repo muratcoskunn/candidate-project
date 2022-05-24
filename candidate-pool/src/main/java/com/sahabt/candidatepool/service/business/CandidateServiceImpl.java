@@ -25,6 +25,7 @@ import java.util.List;
 public class CandidateServiceImpl implements CandidateService {
     private CandidateRepository candidateRepository;
     private ModelMapper modelMapper;
+    private PdfExtracter pdfExtracter;
     @Override
     public List<GetCandidateResponse> getAllCandidates() {
         return candidateRepository.findAll().stream().map(candidate -> modelMapper.map(candidate,GetCandidateResponse.class)).toList();
@@ -55,72 +56,15 @@ public class CandidateServiceImpl implements CandidateService {
         PDDocument document = PDDocument.load(convFile);
         PDFTextStripper pdfTextStripper = new PDFTextStripper();
         String text = pdfTextStripper.getText(document);
-        PdfExtracter pdf = new PdfExtracter();
-        pdf.GetNameFromPdf(text);
-        //System.err.println(text);
-        int i = 0;
-        List fullname = new ArrayList();
-        while(text.charAt(i) !=','){
-            fullname.add(text.charAt(i));
-            i++;
-        }
-        int counter = 0;
-        System.err.println(fullname);
-        List<Character> name = new ArrayList<>();
-        while(text.charAt(counter)!=' '){
-            name.add(text.charAt(counter));
-            counter++;
-        }
-        StringBuilder stringBuilder = new StringBuilder();
-        for (char c :name
-             ) {
-            stringBuilder.append(c);
-        }
-        String nameString = stringBuilder.toString();
-        System.err.println(nameString);
-        StringBuilder lastnameBuilder = new StringBuilder();
-        counter++;
-        while(text.charAt(counter)!=' '){
-            lastnameBuilder.append(text.charAt(counter));
-            counter++;
-        }
-        String lastname = lastnameBuilder.toString();
-        System.err.println(lastname);
-        counter = counter+3;
-        StringBuilder ageBuilder = new StringBuilder();
-        while (text.charAt(counter)!='\r'){
-            ageBuilder.append(text.charAt(counter));
-            counter++;
-        }
-        System.err.println(counter);
-        System.err.println("yas = "+ageBuilder.toString());
-        StringBuilder phoneBuilder = new StringBuilder();
-        for (int k =0;k<text.length();k++){
-            if(text.charAt(k)=='C'){
-                if (text.charAt(k+1)=='e'){
-                    if(text.charAt(k+2)=='p'){
-                        System.err.println("k="+k);
-                        while(text.charAt(k)!='\n'){
-                            k++;
-                        }
-                        System.err.println("k="+k);
-                        k++;
-                        while(text.charAt(k)!='\r'){
-                            phoneBuilder.append(text.charAt(k));
-                            k++;
-
-                        }
-                    }
-                }
-            }
-        }
-        candidate.setPhone(phoneBuilder.toString());
-        System.err.println(ageBuilder.toString());
-        String age = ageBuilder.toString();
+        var name = pdfExtracter.GetNameFromPdf(text);
+        var surname = pdfExtracter.GetSurnameFromPdf(text);
+        var age = pdfExtracter.GetAgeFromPdf(text);
+        var phone = pdfExtracter.GetPhoneFromPdf(text);
         document.close();
-        candidate.setName(nameString);
-        candidate.setSurname(lastname);
+        candidate.setName(name);
+        candidate.setSurname(surname);
         candidate.setAge(age);
+        candidate.setPhone(phone);
         candidateRepository.save(candidate);
         return candidate;
 
